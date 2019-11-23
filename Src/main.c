@@ -50,6 +50,7 @@ extern RTC_HandleTypeDef hrtc;
 char timebuff[15];
 char datebuff[15];
 char timerbuff[15];
+char alarmbuff[15];
 
 uint8_t alarm = 0;
 int set = 0; // in clock
@@ -60,6 +61,8 @@ uint16_t setMinutes = 0x20;
 uint16_t setDate = 0x22; 
 uint16_t setMonth = RTC_MONTH_NOVEMBER; 
 uint16_t setYear = 0x19; 
+uint16_t set_alarm_Hours = 0x10;
+uint16_t set_alarm_minute = 0x22;
 uint8_t timer_count = 0;
 uint8_t timer_minute = 0;
 uint8_t timer_second = 0;
@@ -199,16 +202,49 @@ void set_alarm (void)
 {
 	RTC_AlarmTypeDef sAlarm;
 	
-	sAlarm.AlarmTime.Hours = 0x10;
-  sAlarm.AlarmTime.Minutes = 0x21;
-  sAlarm.AlarmTime.Seconds = 0x30;
+	if(set == 1) {
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == 1) {
+			set_alarm_Hours += 0x1;
+			HAL_Delay(500);
+		}
+		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11) == 1) {
+			set_alarm_Hours -= 0x1;
+			HAL_Delay(500);
+		}
+		if(set_alarm_Hours > 0x23){
+			set_alarm_Hours = 0x0;
+		}
+		if(set_alarm_Hours < 0x0) {
+			set_alarm_Hours = 0x23;
+		}
+	}
+	else if(set == 2) {
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == 1) {
+			set_alarm_minute += 0x1;
+			HAL_Delay(500);
+		}
+		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11) == 1) {
+			set_alarm_minute -= 0x1;
+			HAL_Delay(500);
+		}
+		if(set_alarm_minute > 0x59){
+			set_alarm_minute = 0x0;
+		}
+		if(set_alarm_minute < 0x0){
+			set_alarm_minute = 0x59;
+		}
+	}
+	
+	sAlarm.AlarmTime.Hours = set_alarm_Hours;
+  sAlarm.AlarmTime.Minutes = set_alarm_minute;
+  sAlarm.AlarmTime.Seconds = 0x00;
   sAlarm.AlarmTime.SubSeconds = 0x0;
   sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
   sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
   sAlarm.AlarmMask = RTC_ALARMMASK_NONE;
   sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
   sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
-  sAlarm.AlarmDateWeekDay = 0x22;
+  sAlarm.AlarmDateWeekDay = setDate;
   sAlarm.Alarm = RTC_ALARM_A;
   if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD) != HAL_OK)
   {
@@ -272,14 +308,14 @@ void timer_down (void) {
 void checkstate_timer (void) {
 	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
 		{
-			mode = 0;
+			mode = 2 ;
 		}
 	
 	if(set == 1){
 		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == GPIO_PIN_SET ) {
 			timer_minute += 1;
 		} 
-		else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET ) {
+		else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11) == GPIO_PIN_SET ) {
 			timer_minute -=1;
 		}
 		if(timer_minute > 59) {
@@ -294,7 +330,7 @@ void checkstate_timer (void) {
 		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == GPIO_PIN_SET ) {
 			timer_second += 1;
 		} 
-		else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET ) {
+		else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11) == GPIO_PIN_SET ) {
 			timer_second -=1;
 		}
 		if(timer_second > 59) {
@@ -360,7 +396,7 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
 }
 
 void to_do_alarm (void) {
-	while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0)
+	while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11) == 0)
 	{
 		char str[] = "ALARM!!!";
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, 1);
@@ -440,6 +476,9 @@ int main(void)
 //		}
 		
 		while(mode == 0){
+			while (alarm == 1){
+				to_do_alarm();
+			}
 			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
 			{
 				set = 1;
@@ -464,10 +503,13 @@ int main(void)
 		}
 		// timer mode
 		while(mode == 1){
+			while (alarm == 1){
+				to_do_alarm();
+			}
 			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
 			{
-				set = 0;
-				mode = 0;
+				set = 1;
+				mode = 2;
 			}
 			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == GPIO_PIN_SET)
 			{
@@ -479,6 +521,32 @@ int main(void)
 			sprintf(setbuff, "set : %d\n\r", set);
 			HAL_UART_Transmit(&huart3, (uint8_t*) setbuff ,strlen(setbuff),1000);
 			checkstate_timer();
+
+		}
+		// set alarm
+		while(mode == 2){
+			while (alarm == 1){
+				to_do_alarm();
+			}
+			sprintf(setbuff, "set : %d\n\r", set);
+			HAL_UART_Transmit(&huart3, (uint8_t*) setbuff ,strlen(setbuff),1000);
+			HAL_Delay(1000);
+			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == GPIO_PIN_SET)
+			{
+				set = 1;
+				mode = 0;
+			}
+			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
+			{
+				set++ ;
+				if(set > 2) {
+					set = 1;
+				}
+			}
+			
+			set_alarm();
+			sprintf(alarmbuff, "%02d:%02d", set_alarm_Hours, set_alarm_minute);
+			HAL_UART_Transmit(&huart3, (uint8_t*) alarmbuff ,strlen(alarmbuff),1000);
 
 		}
 			
