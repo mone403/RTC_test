@@ -49,6 +49,7 @@ extern RTC_HandleTypeDef hrtc;
 /* USER CODE BEGIN PV */
 char timebuff[15];
 char datebuff[15];
+char timerbuff[15];
 
 uint8_t alarm = 0;
 int set = 0; // in clock
@@ -62,12 +63,16 @@ uint16_t setYear = 0x19;
 uint8_t timer_count = 0;
 uint8_t timer_minute = 0;
 uint8_t timer_second = 0;
+uint8_t timerdown_minute = 0;
+uint8_t timerdown_second = 0;
+uint8_t backup_timer_minute;
+uint8_t backup_timer_second ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void get_timer();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -84,11 +89,11 @@ void set_time (void){
 //	setMonth = RTC_MONTH_NOVEMBER;
 //	setYear = 0x19;
 	if(set == 1) {
-		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == 1) {
 			setHours += 0x1;
 			HAL_Delay(500);
 		}
-		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == 1) {
+		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
 			setHours -= 0x1;
 			HAL_Delay(500);
 		}
@@ -100,11 +105,11 @@ void set_time (void){
 		}
 	}
 	else if(set == 2) {
-		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == 1) {
 			setMinutes += 0x1;
 			HAL_Delay(500);
 		}
-		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == 1) {
+		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
 			setMinutes -= 0x1;
 			HAL_Delay(500);
 		}
@@ -116,11 +121,11 @@ void set_time (void){
 		}
 	}
 	else if(set == 3) {
-		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == 1) {
 			setDate += 0x1;
 			HAL_Delay(500);
 		}
-		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == 1) {
+		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
 			setDate -= 0x1;
 			HAL_Delay(500);
 		}
@@ -134,11 +139,11 @@ void set_time (void){
 		}
 	}
 	else if(set == 4) {
-		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == 1) {
 				setMonth += 0x1;
 				HAL_Delay(500);
 			}
-			else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == 1) {
+			else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
 				setMonth -= 0x1;
 				HAL_Delay(500);
 			}
@@ -150,11 +155,11 @@ void set_time (void){
 			}
 	}
 	else if(set==5){
-		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == 1) {
 			setYear += 0x1;
 			HAL_Delay(500);
 		}
-		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == 1) {
+		else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1) {
 			setYear -= 0x1;
 			HAL_Delay(500);
 		}
@@ -190,28 +195,6 @@ void set_time (void){
   /* USER CODE END RTC_Init 4 */
 }
 
-void timer (void) {
-	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == 1 ) {
-		timer_minute += 1;
-	} 
-	else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == 1 ) {
-		timer_minute -=1;
-	}
-	if(timer_minute >= 60) {
-			timer_minute = 0;
-		}
-		if(timer_minute < 0){
-			timer_minute = 59;
-		}
-	if(timer_count % 1000){
-		timer_second += 1 ;
-		if(timer_second%60 == 0) {
-			timer_second = 0;
-			timer_minute +=1;
-		}
-	}
-}
-
 void set_alarm (void) 
 {
 	RTC_AlarmTypeDef sAlarm;
@@ -235,6 +218,124 @@ void set_alarm (void)
   /* USER CODE BEGIN RTC_Init 5 */
 
   /* USER CODE END RTC_Init 5 */
+}
+
+void timer_up (void) {
+	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
+		{
+			mode = 0;
+		}
+	
+	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == GPIO_PIN_SET ){
+		backup_timer_minute = timer_minute;
+		backup_timer_second = timer_second;
+		set = 4;
+	}
+	
+	if(timer_count % 1000){
+		timer_second += 1 ;
+		if(timer_second%60 == 0) {
+			timer_second = 0;
+			timer_minute +=1;
+		}
+	}
+	
+}
+
+void timer_down (void) {
+	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
+		{
+			mode = 0;
+		}
+	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == GPIO_PIN_SET ){
+		backup_timer_minute = timer_minute;
+		backup_timer_second = timer_second;
+		set = 4;
+	}
+	
+	if(timer_count % 1000){
+		timer_second -= 1 ;
+		if(timer_second%60 == 0) {
+			if(timer_minute ==0 && timer_second == 0){
+				timer_minute = 0;
+				timer_second =0;
+				backup_timer_minute = timer_minute;
+				backup_timer_second = timer_second;
+				set = 4;
+			}
+			timer_second = 59;
+			timer_minute -=1;
+		}
+	}
+}
+
+void checkstate_timer (void) {
+	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
+		{
+			mode = 0;
+		}
+	
+	if(set == 1){
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == GPIO_PIN_SET ) {
+			timer_minute += 1;
+		} 
+		else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET ) {
+			timer_minute -=1;
+		}
+		if(timer_minute > 59) {
+			timer_minute = 0;
+		}
+		if(timer_minute <0 ) {
+			timer_minute = 59;
+		}
+		get_timer();
+	}
+	else if(set==2){
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_10) == GPIO_PIN_SET ) {
+			timer_second += 1;
+		} 
+		else if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET ) {
+			timer_second -=1;
+		}
+		if(timer_second > 59) {
+			timer_second = 0;
+		}
+		if(timer_second <0 ) {
+			timer_second = 59;
+		}
+		get_timer();
+	}
+	else if (set==3) {
+		if(timer_minute == 0 && timer_second == 0) 
+		{
+			timer_count = 0;
+			while(set==3) {
+				timer_up();
+				get_timer();
+			}
+		} else {
+			timer_count = 0;
+			while(set==3){
+				timer_down();
+				get_timer();
+			}
+		}
+	}
+	else if (set == 4) {
+		timer_count = 0;
+		sprintf(timerbuff, "%02d : %02d\n\r" , backup_timer_minute, backup_timer_second);
+		HAL_UART_Transmit(&huart3, (uint8_t*) timerbuff ,strlen(timerbuff),1000);
+		HAL_Delay(1000);
+	}
+}
+
+
+
+void get_timer(void) {
+	sprintf(timerbuff, "%02d : %02d\r" , timer_minute, timer_second);
+	HAL_UART_Transmit(&huart3, (uint8_t*) timerbuff ,strlen(timerbuff),1000);
+	HAL_Delay(1000);
+	HAL_UART_Transmit(&huart3, (uint8_t*) '\r' ,2,1000);
 }
 
 // current value
@@ -321,37 +422,64 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		get_time();
-		while(__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TC)==RESET) {}
-		HAL_UART_Transmit(&huart3, (uint8_t*) timebuff ,strlen(timebuff),1000);
-		while(__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TC)==RESET) {}
-		HAL_UART_Transmit(&huart3, (uint8_t*) datebuff ,strlen(datebuff),1000);
-		while(__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TC)==RESET) {}
-		HAL_Delay(1000);
+//		get_time();
+//		while(__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TC)==RESET) {}
+//		HAL_UART_Transmit(&huart3, (uint8_t*) timebuff ,strlen(timebuff),1000);
+//		while(__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TC)==RESET) {}
+//		HAL_UART_Transmit(&huart3, (uint8_t*) datebuff ,strlen(datebuff),1000);
+//		HAL_Delay(1000);
 			
 //		while(alarm == 1)
 //		{
 //			to_do_alarm();
 //		}
-		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
-		{
-			set = 1;
-			HAL_Delay(500);
-		}
+//		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
+//		{
+//			mode += 1;
+//			HAL_Delay(500);
+//		}
 		
-		while(set > 0){
-			
-			sprintf(setbuff, "set : %d\n\r", set);
-			HAL_UART_Transmit(&huart3, (uint8_t*) setbuff ,strlen(setbuff),1000);
-			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == 1)
+		while(mode == 0){
+			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
+			{
+				set = 1;
+				mode = 1;
+			}
+			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == 1)
 			{
 				set += 1;
-				HAL_Delay(500);
 				if(set > 5) {
 					set = 0;
 				}
 			}
-			set_time();
+//			sprintf(setbuff, "set : %d\n\r", set);
+//			HAL_UART_Transmit(&huart3, (uint8_t*) setbuff ,strlen(setbuff),1000);
+//			HAL_Delay(1000);
+			get_time();
+			while(__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TC)==RESET) {}
+			HAL_UART_Transmit(&huart3, (uint8_t*) timebuff ,strlen(timebuff),1000);
+			while(__HAL_UART_GET_FLAG(&huart3, UART_FLAG_TC)==RESET) {}
+			HAL_UART_Transmit(&huart3, (uint8_t*) datebuff ,strlen(datebuff),1000);
+			HAL_Delay(1000);
+		}
+		// timer mode
+		while(mode == 1){
+			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_SET)
+			{
+				set = 0;
+				mode = 0;
+			}
+			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9) == GPIO_PIN_SET)
+			{
+				set++ ;
+				if(set > 4) {
+					set = 1;
+				}
+			}
+			sprintf(setbuff, "set : %d\n\r", set);
+			HAL_UART_Transmit(&huart3, (uint8_t*) setbuff ,strlen(setbuff),1000);
+			checkstate_timer();
+
 		}
 			
     /* USER CODE END WHILE */
