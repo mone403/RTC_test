@@ -34,33 +34,31 @@ compiling main.c...
   		if(setHours < 0x0) {
 ../Src/main.c(122): warning:  #186-D: pointless comparison of unsigned integer with zero
   		if(setMinutes < 0x0){
-../Src/main.c(217): warning:  #186-D: pointless comparison of unsigned integer with zero
+../Src/main.c(216): warning:  #186-D: pointless comparison of unsigned integer with zero
   		if(set_alarm_Hours < 0x0) {
-../Src/main.c(233): warning:  #186-D: pointless comparison of unsigned integer with zero
+../Src/main.c(232): warning:  #186-D: pointless comparison of unsigned integer with zero
   		if(set_alarm_minute < 0x0){
-../Src/main.c(324): warning:  #186-D: pointless comparison of unsigned integer with zero
+../Src/main.c(305): warning:  #186-D: pointless comparison of unsigned integer with zero
   		if(timer_minute <0 ) {
-../Src/main.c(339): warning:  #186-D: pointless comparison of unsigned integer with zero
+../Src/main.c(320): warning:  #186-D: pointless comparison of unsigned integer with zero
   		if(timer_second <0 ) {
-../Src/main.c(362): warning:  #223-D: function "sprintf" declared implicitly
+../Src/main.c(343): warning:  #223-D: function "sprintf" declared implicitly
   		sprintf(timerbuff, "%02d : %02d\n\r" , backup_timer_minute, backup_timer_second);
-../Src/main.c(371): warning:  #223-D: function "sprintf" declared implicitly
+../Src/main.c(353): warning:  #223-D: function "sprintf" declared implicitly
   	sprintf(timerbuff, "%02d : %02d\r" , timer_minute, timer_second);
-../Src/main.c(388): warning:  #223-D: function "sprintf" declared implicitly
+../Src/main.c(370): warning:  #223-D: function "sprintf" declared implicitly
   	sprintf(timebuff, "%02d:%02d:%02d\n\r", gTime.Hours , gTime.Minutes, gTime.Seconds);
-../Src/main.c(402): warning:  #188-D: enumerated type mixed with another type
+../Src/main.c(384): warning:  #188-D: enumerated type mixed with another type
   		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, 1);
-../Src/main.c(408): warning:  #188-D: enumerated type mixed with another type
+../Src/main.c(390): warning:  #188-D: enumerated type mixed with another type
   	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, 0);
-../Src/main.c(521): warning:  #223-D: function "sprintf" declared implicitly
-  			sprintf(setbuff, "set : %d\n\r", set);
-../Src/main.c(531): warning:  #223-D: function "sprintf" declared implicitly
-  			sprintf(setbuff, "set : %d\n\r", set);
-../Src/main.c: 14 warnings, 0 errors
+../Src/main.c(436): warning:  #177-D: variable "setbuff"  was declared but never referenced
+  	char setbuff[5];
+../Src/main.c: 13 warnings, 0 errors
 linking...
-Program Size: Code=13592 RO-data=560 RW-data=56 ZI-data=1248  
+Program Size: Code=13552 RO-data=560 RW-data=56 ZI-data=1248  
 FromELF: creating hex file...
-"RTC_UART\RTC_UART.axf" - 0 Error(s), 14 Warning(s).
+"RTC_UART\RTC_UART.axf" - 0 Error(s), 13 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -83,7 +81,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.3.0
-Build Time Elapsed:  00:00:03
+Build Time Elapsed:  00:00:05
 </pre>
 </body>
 </html>
